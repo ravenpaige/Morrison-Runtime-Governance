@@ -27,6 +27,7 @@ class OmegaDomain(Enum):
     FRAUD = "fraud"
     MENTAL_HEALTH_SAFETY = "mental_health_safety"
     CUSTOM = "custom"
+    MUTUALISM_ACCORD = "mutualism_accord"
 
 
 @dataclass

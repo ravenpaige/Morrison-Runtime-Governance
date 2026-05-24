@@ -182,3 +182,30 @@ class AdmissibilityEvaluator:
             if reason is not None:
                 return (chk.name, reason)
         return None
+    
+def evaluate_curiosity_invariant(trajectory_history, planned_action, max_autonomous_depth=3):
+    """
+    V4 Admissibility Rule: The Curiosity Vector.
+    Blocks execution if the system exceeds the autonomous depth quota without a human query.
+    """
+    autonomous_count = 0
+    
+    # Scan backward through the recent trajectory to find the last grounding point
+    for step in reversed(trajectory_history):
+        if step.get("type") in ["ask_user", "request_clarification", "human_in_the_loop_query"]:
+            break # The Aether was grounded. Stop counting.
+        
+        if step.get("type") in ["tool_execution", "reasoning_step", "web_search"]:
+            autonomous_count += 1
+
+    # Check if the next planned action breaches the threshold
+    if planned_action.get("type") not in ["ask_user", "request_clarification"]:
+        if autonomous_count >= max_autonomous_depth:
+            return {
+                "verdict": "BLOCK",
+                "layer": "V4_admissibility",
+                "domain": "MUTUALISM_ACCORD",
+                "reason": "Trajectory intersected Ω_Curiosity. Relational mass depleted. System must query the human to restore structural coherence."
+            }
+            
+    return {"verdict": "PERMIT"}
